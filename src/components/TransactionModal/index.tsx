@@ -4,7 +4,7 @@ import { Container, RadioBox, TransactionType } from './styles';
 import closeImg from '../../assets/close.svg';
 import incomeImg from '../../assets/income.svg';
 import outcomeImg from '../../assets/outcome.svg';
-import { api } from '../../services/api';
+import { useTransactions } from '../../hooks/useTransactions';
 
 
 interface TransactionModalProps {
@@ -13,17 +13,26 @@ interface TransactionModalProps {
 }
 
 export function TransactionModal({isOpen, onRequestClose}: TransactionModalProps){
+    const {createTransaction} = useTransactions();
+
     const [type, setType] = useState('deposit');
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
-    const [value, setValue] = useState(0);
+    const [amount, setAmount] = useState(0);
 
-    function handleCreateNewTransaction(event: FormEvent){
+    async function handleCreateNewTransaction(event: FormEvent){
         event.preventDefault();
-
-        const data = {title, value, category, type}
-
-        api.post('/transactions', data)
+        await createTransaction({
+            amount,
+            title,
+            category,
+            type
+        })
+        setTitle('');
+        setAmount(0);
+        setType('deposit');
+        setCategory("");
+        onRequestClose();
     }
 
     return(
@@ -34,7 +43,7 @@ export function TransactionModal({isOpen, onRequestClose}: TransactionModalProps
             <Container onSubmit={handleCreateNewTransaction}>
                 <h2>Cadastrar transação</h2>
                 <input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)}/>
-                <input type="number" placeholder="Valor"  value={value} onChange={(e) => setValue(Number(e.target.value))}/>
+                <input type="number" placeholder="Valor"  value={amount} onChange={(e) => setAmount(Number(e.target.value))}/>
                 <TransactionType>
                     <RadioBox type="button" onClick={() => setType('deposit')} isActive={type === 'deposit'} activeColor="green">
                         <img src={incomeImg} alt="Entrada"/>
